@@ -1,4 +1,4 @@
-# [![CI - Kustomize validation](https://github.com/princedevc/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/princedevc/REPO/actions/workflows/ci.yml)
+# [![CI - Kustomize validation](https://github.com/princedevc/k8s-webapp-kustomize/actions/workflows/ci.yml/badge.svg)](https://github.com/princedevc/k8s-webapp-kustomize/actions/workflows/ci.yml)
 
 # webapp — Kustomize GitOps-friendly manifests
 
