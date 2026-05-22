@@ -1,0 +1,13 @@
+.DS_Store
+*.swp
+*~
+# Local generated manifests
+build-*.yaml
+
+# Secrets and tooling cache
+*.key
+*.pem
+
+# Editor folders
+.vscode/
+.idea/

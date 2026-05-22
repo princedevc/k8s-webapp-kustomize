@@ -1,0 +1,70 @@
+name: CI - Kustomize validation
+
+on:
+  pull_request:
+    paths:
+      - 'k8s/**'
+      - '.github/workflows/**'
+
+jobs:
+  kustomize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kustomize
+        run: |
+          set -euo pipefail
+          KUSTOMIZE_VER=v5.1.2
+          curl -sLo kustomize.tar.gz "https://github.com/kubernetes-sigs/kustomize/releases/download/${KUSTOMIZE_VER}/kustomize_${KUSTOMIZE_VER#v}_linux_amd64.tar.gz"
+          tar -xzf kustomize.tar.gz
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.35.1/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Validate overlays for plaintext secrets
+        run: |
+          set -euo pipefail
+          found=0
+          for overlay in k8s/overlays/*; do
+            echo "Building $overlay"
+            kustomize build "$overlay" > /tmp/build.yaml
+
+            # detect plain Kubernetes Secret objects
+            secrets=$(yq eval '. | select(.kind == "Secret")' /tmp/build.yaml || true)
+            if [[ -n "$secrets" ]]; then
+              echo "ERROR: Plain Kubernetes Secret found in $overlay"
+              echo "$secrets"
+              found=1
+            fi
+
+            # detect stringData fields (plaintext secret fields)
+            stringdata=$(yq eval '. | select(has("stringData"))' /tmp/build.yaml || true)
+            if [[ -n "$stringdata" ]]; then
+              echo "ERROR: stringData found in $overlay"
+              echo "$stringdata"
+              found=1
+            fi
+          done
+
+          if [[ "$found" -ne 0 ]]; then
+            echo "Plaintext secret checks failed"
+            exit 1
+          fi
+
+          echo "No plaintext secrets detected."
+
+      - name: Generate build artifacts
+        run: |
+          mkdir -p build
+          kustomize build k8s/overlays/staging > build/build-staging.yaml
+          kustomize build k8s/overlays/production > build/build-production.yaml
+
+      - name: Upload build outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: kustomize-builds
+          path: build

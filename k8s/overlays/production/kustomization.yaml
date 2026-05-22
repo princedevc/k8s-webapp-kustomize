@@ -1,0 +1,9 @@
+resources:
+  - ../../base
+  - namespace.yaml
+  - sealedsecret-webapp.yaml
+
+patches:
+  - path: patch-replicas-image.yaml
+
+namespace: production
