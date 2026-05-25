@@ -17,6 +17,30 @@ jobs:
           set -euo pipefail
           KUSTOMIZE_VER=v5.1.2
           curl -sLo kustomize.tar.gz "https://github.com/kubernetes-sigs/kustomize/releases/download/${KUSTOMIZE_VER}/kustomize_${KUSTOMIZE_VER#v}_linux_amd64.tar.gz"
+          
+          # Download with retry and validation
+          for attempt in 1 2 3; do
+            echo "Download attempt $attempt..."
+            if curl -sLf -o kustomize.tar.gz "$DOWNLOAD_URL"; then
+              # Verify it's a valid gzip file
+              if file kustomize.tar.gz | grep -q gzip; then
+                echo "Download successful and verified"
+                break
+              else
+                echo "Downloaded file is not a valid gzip archive, retrying..."
+                rm -f kustomize.tar.gz
+              fi
+            else
+              echo "Download failed, retrying..."
+            fi
+            
+            if [[ $attempt -eq 3 ]]; then
+              echo "Failed to download after 3 attempts"
+              exit 1
+            fi
+            sleep 2
+          done
+
           tar -xzf kustomize.tar.gz
           sudo mv kustomize /usr/local/bin/
 
