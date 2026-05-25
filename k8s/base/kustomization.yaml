@@ -3,3 +3,5 @@ resources:
   - service.yaml
 
 namePrefix: webapp-
+
+# ci-trigger
