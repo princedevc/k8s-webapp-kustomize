@@ -8,6 +8,12 @@ on:
     paths:
       - 'k8s/**'
       - '.github/workflows/**'
+  push:
+    branches:
+      - 'ci/test-run'
+    paths:
+      - 'k8s/**'
+      - '.github/workflows/**'
 
 jobs:
   kustomize:
@@ -19,12 +25,12 @@ jobs:
         run: |
           set -euo pipefail
           KUSTOMIZE_VER=v5.1.2
-          curl -sLo kustomize.tar.gz "https://github.com/kubernetes-sigs/kustomize/releases/download/${KUSTOMIZE_VER}/kustomize_${KUSTOMIZE_VER#v}_linux_amd64.tar.gz"
+          KUSTOMIZE_URL="https://github.com/kubernetes-sigs/kustomize/releases/download/${KUSTOMIZE_VER}/kustomize_${KUSTOMIZE_VER#v}_linux_amd64.tar.gz"
           
           # Download with retry and validation
           for attempt in 1 2 3; do
             echo "Download attempt $attempt..."
-            if curl -sLf -o kustomize.tar.gz "$DOWNLOAD_URL"; then
+            if curl -sLf -o kustomize.tar.gz "$KUSTOMIZE_URL"; then
               # Verify it's a valid gzip file
               if file kustomize.tar.gz | grep -q gzip; then
                 echo "Download successful and verified"
