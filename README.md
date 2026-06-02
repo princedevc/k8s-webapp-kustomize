@@ -107,3 +107,125 @@ Included build outputs
 - Production build: [build-production.yaml](build-production.yaml)
 
 The included `build-*.yaml` files are the result of `kustomize build` of each overlay at the time of this submission; they may contain placeholder `SealedSecret` objects which must be regenerated for your cluster before applying.
+
+
+---
+staging-output
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: staging
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-webapp
+  namespace: staging
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: webapp
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-webapp
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+      - envFrom:
+        - secretRef:
+            name: webapp-secret
+        image: nginx:1.25
+        name: webapp
+        ports:
+        - containerPort: 80
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: webapp-secret
+  namespace: staging
+spec:
+  encryptedData:
+    API_KEY: AQICAHjzkFyXLGkR6lEcv7gU7KpeVhMXd2Q48la5CwDgQh8T1gxz1AgkK0n9wfWJHpUz9mQO2RaSx5SgkoiM7uHU2kL0ntxwXONaIZpHnK1XuXvYq4AAAAqjCCAzYwggMrBgkqhkiG9w0BBwaggjswggI6AgEAMIGwBgkqhkiG9w0BBwaggYgwgYMg
+    DB_PASSWORD: AQICAHjztkUpr3Y6kTg3MU9YcDBVg2kl4gOeLzjaSzlGj5Cg4Qtq4okVaaiZNtM7tZb/7dYGxAAAAjDCBqQYJKoZIhvcNAQcGoIGeMIGbAgEAMIGXBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDM/a8kPZ2sH4X-UezQIBEIBWmVUdVv1A9iyzHhPIaO-9X9z3dA8Ue8hU0ZDV7Qk8eKLx2QpRAAWg2g==
+  template:
+    metadata:
+      name: webapp-secret
+      namespace: staging
+
+
+---
+production-output
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-webapp
+  namespace: production
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: webapp
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-webapp
+  namespace: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+      - envFrom:
+        - secretRef:
+            name: webapp-secret
+        image: nginx:1.27
+        name: webapp
+        ports:
+        - containerPort: 80
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: webapp-secret
+  namespace: production
+spec:
+  encryptedData:
+    API_KEY: AQICAHju4ieL8kExdHVN6ko3HwZl0o+st6J6m1+2pH4OzS9ucvNRs3XwZpK8yxY78w4NC6HqvLRT0v5U2Q==
+    DB_PASSWORD: AQICAHjotC7sJH9xLb4DYQkz4Y3mBL2KLTnZ/1aZqz1JcGKpYp0D5lZ6gPmA4FxQShkJ6n8yPz9scV9QYg3M1tUdLqv26M1DXY0LZtG5x7vEwYzJ+gAAAAjDCBrQYJKoZIhvcNAQcGoIGYMIGVAgEAMIGXBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDG4/OL5FcgM3VQgDMhAIBEICvS5B9nV4z5uSVxA8L6GQHiB8H2hPVdW66X36GbWV1I2AnJuQtQmRQ==
+  template:
+    metadata:
+      name: webapp-secret
+      namespace: production
