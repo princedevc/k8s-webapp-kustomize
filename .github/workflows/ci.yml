@@ -13,7 +13,7 @@ jobs:
   kustomize:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install kustomize
         run: |
@@ -91,7 +91,7 @@ jobs:
           kustomize build k8s/overlays/production > build/build-production.yaml
 
       - name: Upload build outputs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: kustomize-builds
           path: build
